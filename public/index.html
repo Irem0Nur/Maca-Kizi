@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Maça Kızı</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <section id="menu" class="menu-screen">
+    <div class="menu-card">
+      <div class="brand">♠ MAÇA KIZI</div>
+      <p>Özel kurallarla kart oyunu</p>
+
+      <input id="name" value="Oyuncu" placeholder="Oyuncu adı"/>
+
+      <button id="botBtn" class="primary">＋ 1 Oyuncu + 3 Bot</button>
+      <button id="createBtn">🌐 Online Oda Kur</button>
+
+      <div class="join">
+        <input id="roomInput" placeholder="Oda kodu"/>
+        <button id="joinBtn">Katıl</button>
+      </div>
+
+      <p id="menuMsg"></p>
+    </div>
+  </section>
+
+  <section id="game" class="hidden">
+    <header class="topbar">
+      <div class="brand">♠ MAÇA KIZI</div>
+      <div class="mode-pill" id="modeLabel">1 Oyuncu + 3 Bot</div>
+    </header>
+
+    <main class="game-layout">
+      <aside class="left-column">
+        <div class="panel">
+          <h3>Oyun Bilgileri</h3>
+          <div>Tur: <strong id="roundInfo">1</strong></div>
+          <div>El: <strong id="trickInfo">0 / 13</strong></div>
+          <div>Sıra: <strong id="turnInfo">-</strong></div>
+          <div>Kupa: <strong id="heartInfo">Kırılmadı</strong></div>
+          <div>Oda: <strong id="roomCode">-</strong></div>
+        </div>
+
+        <div class="panel log-panel">
+          <h3>Oyun Günlüğü</h3>
+          <div id="log"></div>
+        </div>
+      </aside>
+
+      <section class="table-zone">
+        <div class="table-wood">
+          <div class="felt">
+            <div id="seatTop" class="seat seat-top"></div>
+            <div id="seatLeft" class="seat seat-left"></div>
+            <div id="seatRight" class="seat seat-right"></div>
+            <div id="seatBottom" class="seat seat-bottom"></div>
+
+            <div id="backsTop" class="backs backs-top"></div>
+            <div id="backsLeft" class="backs backs-left"></div>
+            <div id="backsRight" class="backs backs-right"></div>
+
+            <div id="table" class="trick-area"></div>
+          </div>
+        </div>
+
+        <div class="turn-timer-wrap">
+          <div class="turn-timer-label">Hamle Süresi</div>
+          <div id="turnTimer" class="turn-timer">20</div>
+          <div class="timer-track"><div id="timerFill" class="timer-fill"></div></div>
+        </div>
+
+        <div id="hand" class="hand"></div>
+        <div id="status" class="status-bar"></div>
+      </section>
+
+      <aside class="right-column">
+        <div class="panel scoreboard-panel">
+          <h3>Skor Tablosu</h3>
+
+          <div class="score-head">
+            <span>Oyuncu</span>
+            <span>Ceza</span>
+            <span>Kafa</span>
+          </div>
+
+          <div id="scoreboard"></div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <div id="kafaOverlay" class="event-overlay hidden">
+      <div class="event-card">💥 KAFA!</div>
+    </div>
+
+    <div id="peskirOverlay" class="event-overlay hidden">
+      <div class="event-card">🧣 PEŞKİR!</div>
+    </div>
+
+
+    <div id="peskirPrompt" class="decision-overlay hidden">
+      <div class="decision-card">
+        <div class="decision-icon">🧣</div>
+        <h2>Peşkir İlanı</h2>
+        <p>Kartlarını inceledin. Şimdi Peşkir kararını verebilirsin.</p>
+        <p><strong>Peşkir atmak ister misin?</strong></p>
+        <div class="decision-actions">
+          <button id="peskirYes" class="yes-btn">Evet, Peşkir İlan Et</button>
+          <button id="peskirNo" class="no-btn">Hayır</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gameOverOverlay" class="gameover-overlay hidden">
+      <div class="gameover-card">
+        <div class="gameover-title">OYUN BİTTİ</div>
+        <div id="gameOverReason" class="gameover-reason"></div>
+
+        <div class="final-head">
+          <span>Sıra</span>
+          <span>Oyuncu</span>
+          <span>Ceza</span>
+          <span>Kafa</span>
+          <span>Durum</span>
+        </div>
+
+        <div id="finalScoreboard"></div>
+
+        <button onclick="location.reload()" class="restart-btn">
+          Yeni Oyun
+        </button>
+      </div>
+    </div>
+
+    <audio id="kafaSound" preload="auto">
+      <source src="kafa.mp3" type="audio/mpeg"/>
+    </audio>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
