@@ -29,8 +29,13 @@
   <section id="game" class="hidden">
     <header class="topbar">
       <div class="brand">♠ MAÇA KIZI</div>
-      <div class="mode-pill" id="modeLabel">1 Oyuncu + 3 Bot</div>
+      <div class="topbar-right">
+        <div class="mode-pill" id="modeLabel">1 Oyuncu + 3 Bot</div>
+        <button id="leaveBtn" class="leave-btn">Odadan Çık</button>
+      </div>
     </header>
+
+    <div id="connBanner" class="conn-banner hidden">Bağlantı koptu, yeniden bağlanılıyor…</div>
 
     <main class="game-layout">
       <aside class="left-column">
@@ -92,6 +97,21 @@
 
     <div id="toast" class="toast hidden"></div>
 
+    <div id="lobbyOverlay" class="decision-overlay hidden">
+      <div class="decision-card lobby-card">
+        <div class="decision-icon">🌐</div>
+        <h2>Oyuncular Bekleniyor</h2>
+        <p>Arkadaşlarına oda kodunu ya da davet linkini gönder.</p>
+        <div class="lobby-code" id="lobbyCode">-----</div>
+        <div class="decision-actions">
+          <button id="copyLinkBtn" class="neutral-btn">🔗 Davet Linkini Kopyala</button>
+        </div>
+        <div id="lobbySeats" class="lobby-seats"></div>
+        <div id="lobbyHostArea" class="decision-actions"></div>
+        <p class="lobby-hint" id="lobbyHint"></p>
+      </div>
+    </div>
+
     <div id="kafaOverlay" class="event-overlay hidden">
       <div class="event-card">💥 KAFA!</div>
     </div>
@@ -107,6 +127,7 @@
         <h2>Peşkir İlanı</h2>
         <p>Kartlarını inceledin. Şimdi Peşkir kararını verebilirsin.</p>
         <p><strong>Peşkir atmak ister misin?</strong></p>
+        <p class="peskir-countdown" id="peskirCountdown"></p>
         <div class="decision-actions">
           <button id="peskirYes" class="yes-btn">Evet, Peşkir İlan Et</button>
           <button id="peskirNo" class="no-btn">Hayır</button>
@@ -129,9 +150,11 @@
 
         <div id="finalScoreboard"></div>
 
-        <button onclick="location.reload()" class="restart-btn">
-          Yeni Oyun
-        </button>
+        <div class="gameover-actions">
+          <button id="rematchBtn" class="restart-btn">🔁 Rövanş</button>
+          <button id="menuBtn" class="restart-btn secondary">Ana Menü</button>
+        </div>
+        <p id="rematchHint" class="lobby-hint"></p>
       </div>
     </div>
 

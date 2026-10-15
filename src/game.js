@@ -222,9 +222,14 @@ export function createGame(mode, roomCode) {
     peskirDeclarations: {},
     peskirAnswers: {},
     log: [],
+    started: false,
+    dealId: 0,
 
     startRound() {
       if (this.players.length !== 4 || this.gameOver) return;
+
+      this.started = true;
+      this.dealId += 1;
 
       const deck = shuffle(makeDeck());
 

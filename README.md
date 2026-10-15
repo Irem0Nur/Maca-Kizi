@@ -73,3 +73,14 @@ Kafa sesi için istersen public/kafa.mp3 dosyası ekleyebilirsin.
 - Bu 5 saniye oyuncunun elindeki kartları inceleme süresidir.
 - İnceleme sırasında hamle sayacı başlamaz ve kart oynanamaz.
 - Botların Peşkir cevapları da bu inceleme süresinden sonra görünmeye başlar.
+
+
+## V8 Online Oda
+Oyun kuralları (`src/game.js`) değişmedi; sadece online oda altyapısı yenilendi.
+- Oda kurunca bekleme ekranı açılır: oda kodu, davet linki (`?oda=KOD`) ve 4 koltuk görünür.
+- 4 kişi olunca oyun kendiliğinden başlar. Oda sahibi isterse boş koltukları botla doldurup başlatabilir.
+- Sayfa yenilenirse ya da internet kısa süre koparsa oyuncu aynı koltuğa, kendi kartlarıyla geri döner.
+- Bağlantısı kopan oyuncu herkese "📴 Bağlı değil" olarak görünür. 30 sn içinde dönmezse hamleleri (kurala uygun en düşük kart) hızlıca otomatik oynanır; dönünce kaldığı yerden devam eder.
+- Peşkir: 5 sn inceleme + 20 sn karar süresi. Cevap vermeyen oyuncu HAYIR sayılır, oyun kilitlenmez.
+- Oyun bitince oda sahibi aynı odada "Rövanş" başlatabilir.
+- Oyuncu isimleri temizlenir; başkasının eli veya oturum anahtarı hiçbir oyuncuya gönderilmez.
