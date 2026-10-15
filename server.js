@@ -367,13 +367,35 @@ function leaveCurrentRoom(socket) {
 
   if (!game.started) {
     removeFromLobby(game, player);
-  } else {
-    player.connected = false;
-    player.socketId = null;
-    player.disconnectedAt = Date.now();
-    if (game.mode === "online" && !game.gameOver) game.log.push(`🚪 ${player.name} oyundan ayrıldı.`);
-    emitRoom(game);
-    scheduleCleanupIfEmpty(game);
+    return;
+  }
+
+  // Bot oyunundan çıkmak oyunu bitirir.
+  if (game.mode === "bot") {
+    deleteRoom(game.roomCode);
+    return;
+  }
+
+  // Online oyunda bilerek çıkan oyuncu beklenmez: hamleleri hemen otomatik oynanır.
+  player.connected = false;
+  player.socketId = null;
+  player.disconnectedAt = Date.now() - AWAY_GRACE_MS;
+  if (!game.gameOver) game.log.push(`🚪 ${player.name} oyundan ayrıldı. Hamleleri otomatik oynanacak.`);
+
+  // Masada hiç gerçek oyuncu kalmadıysa oda kapanır.
+  if (!game.players.some(p => !p.isBot && p.connected)) {
+    deleteRoom(game.roomCode);
+    return;
+  }
+
+  emitRoom(game);
+  // Sırası gelmişse 20 sn beklemeden oynansın.
+  if (game.currentPlayer === player.id && !game.waitingPeskir && !game.trickResolving) {
+    startTurnTimer(game);
+  }
+  if (game.waitingPeskir && game.pendingPeskir.includes(player.id)) {
+    applyPeskirDecision(game, player.id, false);
+    onPeskirChanged(game);
   }
 }
 
@@ -564,6 +586,29 @@ io.on("connection", socket => {
   socket.on("leaveRoom", () => {
     leaveCurrentRoom(socket);
     socket.emit("left");
+  });
+
+  // Menüde "Devam eden oyunun var" kartı için: oda hâlâ duruyor mu?
+  socket.on("checkSession", ({ token, roomCode } = {}, reply) => {
+    if (typeof reply !== "function") return;
+    const t = cleanToken(token);
+    const game = rooms.get(String(roomCode || "").toUpperCase());
+    const player = t && game?.players.find(p => p.token === t);
+    if (!player || game.gameOver) return reply({ exists: false });
+    reply({ exists: true, mode: game.mode, started: Boolean(game.started), roomCode: game.roomCode });
+  });
+
+  // Menüden "Oyunu bitir": odaya bağlanmadan oyundan çık.
+  socket.on("abandon", ({ token, roomCode } = {}, reply) => {
+    const t = cleanToken(token);
+    const game = rooms.get(String(roomCode || "").toUpperCase());
+    const player = t && game?.players.find(p => p.token === t);
+    if (player) {
+      socket.data.roomCode = game.roomCode;
+      socket.data.playerId = player.id;
+      leaveCurrentRoom(socket);
+    }
+    if (typeof reply === "function") reply({ ok: true });
   });
 
   socket.on("playCard", ({ cardId } = {}) => {

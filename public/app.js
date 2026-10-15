@@ -21,6 +21,17 @@ if (!token || !/^[A-Za-z0-9_-]{16,64}$/.test(token)) {
 
 const savedName = storageGet("mk_name");
 
+// Bu sekmede açık olan oda. Sayfa yenilenince kalır, sekme kapanınca silinir.
+function sessionGet() {
+  try { return sessionStorage.getItem("mk_live"); } catch { return null; }
+}
+function sessionSet(value) {
+  try {
+    if (value === null) sessionStorage.removeItem("mk_live");
+    else sessionStorage.setItem("mk_live", value);
+  } catch {}
+}
+
 let roomCode = null;
 let me = null;
 let prevState = null;
@@ -60,6 +71,8 @@ function showMenu(message = "") {
   peskirPromptShownForRound = null;
   clearTimeout(peskirPromptTimer);
   storageSet("mk_room", null);
+  sessionSet(null);
+  $("resumeBox").classList.add("hidden");
   $("game").classList.add("hidden");
   $("menu").classList.remove("hidden");
   $("gameOverOverlay").classList.add("hidden");
@@ -77,17 +90,27 @@ const suitSymbol = suit => ({
 
 const isRed = suit => suit === "H" || suit === "D";
 
+// Menüde bekleyen eski bir oyun varken yenisi başlatılırsa eskisinden çık.
+function abandonSaved() {
+  const saved = storageGet("mk_room");
+  if (saved && !roomCode) socket.emit("abandon", { token, roomCode: saved });
+  $("resumeBox").classList.add("hidden");
+}
+
 $("botBtn").onclick = () => {
+  abandonSaved();
   socket.emit("botGame", { name: playerName(), token });
 };
 
 $("createBtn").onclick = () => {
+  abandonSaved();
   socket.emit("createRoom", { name: playerName(), token });
 };
 
 $("joinBtn").onclick = () => {
   const code = $("roomInput").value.trim();
   if (!code) return showToast("Oda kodunu yaz.");
+  if (code.toUpperCase() !== storageGet("mk_room")) abandonSaved();
   socket.emit("joinRoom", { roomCode: code, name: playerName(), token });
 };
 
@@ -96,8 +119,11 @@ $("roomInput").addEventListener("keydown", e => {
 });
 
 $("leaveBtn").onclick = () => {
-  const inGame = prevState && prevState.started && !prevState.gameOver && prevState.mode === "online";
-  if (inGame && !confirm("Oyundan çıkarsan hamlelerin otomatik oynanacak. Çıkmak istiyor musun?")) return;
+  const inGame = prevState && prevState.started && !prevState.gameOver;
+  const question = prevState?.mode === "bot"
+    ? "Oyunu bitirmek istiyor musun?"
+    : "Oyundan çıkarsan hamlelerin otomatik oynanacak. Çıkmak istiyor musun?";
+  if (inGame && !confirm(question)) return;
   socket.emit("leaveRoom");
   showMenu();
 };
@@ -122,8 +148,38 @@ $("copyLinkBtn").onclick = async () => {
 socket.on("connect", () => {
   $("connBanner").classList.add("hidden");
   const savedRoom = storageGet("mk_room");
-  if (savedRoom) socket.emit("resume", { token, roomCode: savedRoom });
+  if (!savedRoom) return;
+
+  // Sayfa yenilendi ya da internet kısa süre koptu: doğrudan geri dön.
+  if (sessionGet() === savedRoom || roomCode) {
+    socket.emit("resume", { token, roomCode: savedRoom });
+    return;
+  }
+
+  // Sekme kapatılıp site yeniden açıldı: oyuncuya sor.
+  socket.emit("checkSession", { token, roomCode: savedRoom }, info => {
+    if (!info?.exists) {
+      storageSet("mk_room", null);
+      return;
+    }
+    $("resumeText").textContent = info.mode === "bot"
+      ? "Botlarla devam eden bir oyunun var."
+      : `${info.roomCode} odasında devam eden bir oyunun var.`;
+    $("resumeBox").classList.remove("hidden");
+  });
 });
+
+$("resumeBtn").onclick = () => {
+  $("resumeBox").classList.add("hidden");
+  socket.emit("resume", { token, roomCode: storageGet("mk_room") });
+};
+
+$("abandonBtn").onclick = () => {
+  socket.emit("abandon", { token, roomCode: storageGet("mk_room") }, () => {});
+  storageSet("mk_room", null);
+  $("resumeBox").classList.add("hidden");
+  $("menuMsg").textContent = "Önceki oyundan çıktın.";
+};
 
 socket.on("disconnect", () => {
   if (roomCode) $("connBanner").classList.remove("hidden");
@@ -137,6 +193,8 @@ socket.on("joined", data => {
   roomCode = data.roomCode;
   me = data.playerId;
   storageSet("mk_room", roomCode);
+  sessionSet(roomCode);
+  $("resumeBox").classList.add("hidden");
 
   if (inviteCode && history.replaceState) history.replaceState(null, "", location.pathname);
 
@@ -414,6 +472,7 @@ function render(state) {
   $("roomCode").textContent = state.roomCode;
   $("modeLabel").textContent =
     state.mode === "bot" ? "＋ 1 Oyuncu + 3 Bot" : "🌐 Online Oyun";
+  $("leaveBtn").textContent = state.mode === "bot" ? "Oyunu Bitir" : "Odadan Çık";
 
   $("roundInfo").textContent = state.round;
 

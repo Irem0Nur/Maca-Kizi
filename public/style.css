@@ -402,6 +402,12 @@ button{cursor:pointer}
 
 
 /* ---------- Online oda ---------- */
+.resume-box{
+  margin:14px 0 4px;padding:12px;border-radius:12px;text-align:center;
+  border:1px solid rgba(232,189,98,.55);background:#1a1a12;color:#f2e6c8
+}
+.resume-actions{display:flex;gap:8px;margin-top:8px}
+.resume-actions button{flex:1;margin:0!important}
 .topbar-right{display:flex;align-items:center;gap:10px}
 .leave-btn{
   padding:9px 14px;border-radius:9px;background:transparent;color:#ddd4c3;
